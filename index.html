@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>instant.dev — Get a database in 3 seconds</title>
+  <meta name="description" content="One curl command. Real Postgres. No account, no Docker, no setup.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 640px; margin: 0 auto; padding: 0 20px; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 0 40px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1rem;
+      color: #888;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── The Prompt (hero element) ── */
+    .prompt {
+      margin: 40px 0 16px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .prompt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .prompt-label {
+      font-size: 0.72rem;
+      color: #555;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .copy-btn {
+      background: none;
+      border: 1px solid #333;
+      color: #888;
+      font-size: 0.75rem;
+      padding: 3px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: #4af; color: #4af; }
+    .copy-btn.copied { border-color: #4a4; color: #4a4; }
+    .prompt-code {
+      padding: 16px 18px;
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .prompt-code .cm { color: #555; }
+    .prompt-code .cmd { color: #ccc; }
+    .prompt-code .url { color: #6bf; }
+    .prompt-code .str { color: #adf; }
+
+    .hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 48px;
+    }
+    .hint code {
+      color: #888;
+      font-family: monospace;
+      background: #111;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* ── Output preview ── */
+    .output {
+      margin: 0 0 48px;
+      border-top: 1px solid #1a1a1a;
+      padding-top: 32px;
+    }
+    .output h2 {
+      font-size: 0.82rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .output-block {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.82rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .output-block .k { color: #6bf; }
+    .output-block .v { color: #efa; }
+    .output-block .s { color: #adf; }
+    .output-block .n { color: #fa5; }
+    .output-block .b { color: #4a4; }
+
+    /* ── Services row ── */
+    .services {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: #1a1a1a;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .svc {
+      background: #0a0a0a;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .svc h3 { font-size: 0.88rem; color: #fff; margin-bottom: 4px; }
+    .svc code { font-size: 0.72rem; color: #6bf; display: block; margin-bottom: 8px; }
+    .svc p { font-size: 0.75rem; color: #666; line-height: 1.4; }
+
+    /* ── How it works ── */
+    .how {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 0;
+    }
+    .how h2 {
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .step {
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .step .num { font-size: 0.65rem; color: #444; font-family: monospace; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .step h4 { font-size: 0.85rem; color: #e0e0e0; margin-bottom: 4px; }
+    .step p { font-size: 0.75rem; color: #666; line-height: 1.4; }
+
+    /* ── For AI agents ── */
+    .agents {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 0 20px;
+      text-align: center;
+    }
+    .agents h2 { font-size: 1rem; color: #fff; margin-bottom: 8px; }
+    .agents p { font-size: 0.85rem; color: #666; margin-bottom: 16px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .agents .prompt-inline {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: "SF Mono", monospace;
+      font-size: 0.82rem;
+      color: #adf;
+      text-align: left;
+      margin: 16px 0;
+    }
+    .agent-links {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .agent-links a {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 5px;
+      color: #888;
+      font-size: 0.78rem;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .agent-links a:hover { border-color: #4af; color: #4af; }
+
+    /* ── Pricing ── */
+    .pricing {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 0;
+      text-align: center;
+    }
+    .pricing h2 { font-size: 1rem; color: #fff; margin-bottom: 20px; }
+    .tiers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #1a1a1a;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .tier {
+      background: #0a0a0a;
+      padding: 24px 16px;
+    }
+    .tier h3 { font-size: 1rem; color: #fff; margin-bottom: 4px; }
+    .tier .price { font-size: 1.4rem; color: #4af; font-weight: 700; margin-bottom: 8px; }
+    .tier ul { list-style: none; font-size: 0.78rem; color: #666; }
+    .tier ul li { margin-bottom: 4px; }
+    .tier ul li::before { content: "- "; color: #333; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid #1a1a1a;
+      padding: 24px 0;
+      text-align: center;
+      color: #333;
+      font-size: 0.75rem;
+    }
+    footer a { color: #444; text-decoration: none; margin: 0 8px; }
+    footer a:hover { color: #888; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.6rem; }
+      .services, .steps { grid-template-columns: 1fr; }
+      .tiers { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="hero">
+      <h1>Get a Postgres database<br>in 3 seconds.</h1>
+      <p>One command. Real database. No account needed.</p>
+    </div>
+
+    <!-- THE PROMPT — the one thing visitors need to copy -->
+    <div class="prompt">
+      <div class="prompt-header">
+        <span class="prompt-label">copy and run</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
+      </div>
+      <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instant.dev/db/new</span> <span class="cmd">| jq</span></div>
+    </div>
+
+    <p class="hint">No account. No API key. No Docker. Just <code>curl</code>.</p>
+
+    <!-- What comes back -->
+    <div class="output">
+      <h2>You get back</h2>
+      <div class="output-block">{
+  <span class="k">"ok"</span>:             <span class="b">true</span>,
+  <span class="k">"token"</span>:          <span class="s">"a1b2c3d4-..."</span>,
+  <span class="k">"connection_url"</span>: <span class="v">"postgres://usr_a1b2:s3cr3t@db.instant.dev:5432/db_a1b2"</span>,
+  <span class="k">"tier"</span>:           <span class="s">"anonymous"</span>,
+  <span class="k">"limits"</span>:         { <span class="k">"storage_mb"</span>: <span class="n">10</span>, <span class="k">"connections"</span>: <span class="n">2</span>, <span class="k">"expires_in"</span>: <span class="s">"24h"</span> },
+  <span class="k">"note"</span>:           <span class="s">"Works now. Keep it forever (free 14-day trial): https://..."</span>
+}</div>
+    </div>
+
+    <!-- Three services, that's it -->
+    <div class="services">
+      <div class="svc">
+        <h3>Postgres</h3>
+        <code>POST /db/new</code>
+        <p>Real Postgres with pgvector. Standard postgres:// URL.</p>
+      </div>
+      <div class="svc">
+        <h3>Redis</h3>
+        <code>POST /cache/new</code>
+        <p>Redis cache with ACL isolation. Standard redis:// URL.</p>
+      </div>
+      <div class="svc">
+        <h3>Webhooks</h3>
+        <code>POST /webhook/new</code>
+        <p>Receive and inspect HTTP callbacks. Stored 24h.</p>
+      </div>
+    </div>
+
+    <!-- How it works — 3 steps max -->
+    <div class="how">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">Step 1</div>
+          <h4>One POST</h4>
+          <p>No account, no config. Returns a live connection string in under 500ms.</p>
+        </div>
+        <div class="step">
+          <div class="num">Step 2</div>
+          <h4>Paste and run</h4>
+          <p>Standard postgres:// URL. Works with psql, psycopg2, pg, Prisma, SQLAlchemy.</p>
+        </div>
+        <div class="step">
+          <div class="num">Step 3</div>
+          <h4>Keep it</h4>
+          <p>Anonymous = 24h. Click the upgrade link in the response to make it permanent.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- For AI agents -->
+    <div class="agents">
+      <h2>Built for AI agents</h2>
+      <p>Give your coding assistant this prompt. It provisions the database and writes working code.</p>
+      <div class="prompt-inline">Use instant.dev to get a Postgres database. Run: curl -s -X POST https://instant.dev/db/new | jq and use the connection_url from the response.</div>
+      <div class="agent-links">
+        <a href="/llms.txt">llms.txt</a>
+        <a href="https://github.com/instant-dev/mcp">MCP Server</a>
+      </div>
+    </div>
+
+    <!-- Simple pricing -->
+    <div class="pricing">
+      <h2>Pricing</h2>
+      <div class="tiers">
+        <div class="tier">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>Postgres 10MB / 2 connections</li>
+            <li>Redis 5MB</li>
+            <li>Webhooks (100 stored)</li>
+            <li>Expires in 24 hours</li>
+            <li>5 provisions per day</li>
+          </ul>
+        </div>
+        <div class="tier">
+          <h3>Developer</h3>
+          <div class="price">$12/mo</div>
+          <ul>
+            <li>Postgres 500MB / 5 connections</li>
+            <li>Redis 25MB</li>
+            <li>Webhooks (1000 stored)</li>
+            <li>Never expires</li>
+            <li>Unlimited provisions</li>
+            <li>14-day free trial</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="/healthz">Status</a>
+      <p style="margin-top:12px;">instant.dev</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Configurable: set window.INSTANT_API before this script loads to override.
+    // Default: https://api.instant.dev (the separate backend).
+    const API = window.INSTANT_API || 'https://api.instant.dev';
+
+    function copyPrompt() {
+      const text = 'curl -s -X POST ' + API + '/db/new | jq';
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    // Rewrite hardcoded URLs to use the configured API base.
+    document.getElementById('promptCode').innerHTML =
+      '<span class="cmd">curl</span> <span class="url">-s -X POST ' + API + '/db/new</span> <span class="cmd">| jq</span>';
+    document.querySelector('.prompt-inline').textContent =
+      'Use instant.dev to get a Postgres database. Run: curl -s -X POST ' + API + '/db/new | jq and use the connection_url from the response.';
+    document.querySelector('footer a[href="/healthz"]').href = API + '/healthz';
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "instant-lite-web",
+  "version": "1.0.0",
+  "description": "Static landing page for instant.dev — hosted on GitHub Pages.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test --project=chromium",
+    "test:headed": "npx playwright test --project=chromium --headed",
+    "serve": "npx serve . -l 3000 -s"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "serve": "^14.2.6"
+  }
+}
