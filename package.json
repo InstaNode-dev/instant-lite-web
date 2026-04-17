@@ -1,7 +1,7 @@
 {
   "name": "instant-lite-web",
   "version": "1.0.0",
-  "description": "Static landing page for instant.dev — hosted on GitHub Pages.",
+  "description": "Static landing page for instanode.dev — hosted on GitHub Pages.",
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test --project=chromium",

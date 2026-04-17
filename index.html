@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>instant.dev — Get a database in 3 seconds</title>
+  <title>instanode.dev — Get a database in 3 seconds</title>
   <meta name="description" content="One curl command. Real Postgres. No account, no Docker, no setup.">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -274,7 +274,7 @@
         <span class="prompt-label">copy and run</span>
         <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
       </div>
-      <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instant.dev/db/new</span> <span class="cmd">| jq</span></div>
+      <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instanode.dev/db/new</span> <span class="cmd">| jq</span></div>
     </div>
 
     <p class="hint">No account. No API key. No Docker. Just <code>curl</code>.</p>
@@ -285,7 +285,7 @@
       <div class="output-block">{
   <span class="k">"ok"</span>:             <span class="b">true</span>,
   <span class="k">"token"</span>:          <span class="s">"a1b2c3d4-..."</span>,
-  <span class="k">"connection_url"</span>: <span class="v">"postgres://usr_a1b2:s3cr3t@db.instant.dev:5432/db_a1b2"</span>,
+  <span class="k">"connection_url"</span>: <span class="v">"postgres://usr_a1b2:s3cr3t@db.instanode.dev:5432/db_a1b2"</span>,
   <span class="k">"tier"</span>:           <span class="s">"anonymous"</span>,
   <span class="k">"limits"</span>:         { <span class="k">"storage_mb"</span>: <span class="n">10</span>, <span class="k">"connections"</span>: <span class="n">2</span>, <span class="k">"expires_in"</span>: <span class="s">"24h"</span> },
   <span class="k">"note"</span>:           <span class="s">"Works now. Keep it forever (free 14-day trial): https://..."</span>
@@ -337,7 +337,7 @@
     <div class="agents">
       <h2>Built for AI agents</h2>
       <p>Give your coding assistant this prompt. It provisions the database and writes working code.</p>
-      <div class="prompt-inline">Use instant.dev to get a Postgres database. Run: curl -s -X POST https://instant.dev/db/new | jq and use the connection_url from the response.</div>
+      <div class="prompt-inline">Use instanode.dev to get a Postgres database. Run: curl -s -X POST https://instanode.dev/db/new | jq and use the connection_url from the response.</div>
       <div class="agent-links">
         <a href="/llms.txt">llms.txt</a>
         <a href="https://github.com/instant-dev/mcp">MCP Server</a>
@@ -377,15 +377,15 @@
     <footer>
       <a href="/llms.txt">llms.txt</a>
       <a href="/healthz">Status</a>
-      <p style="margin-top:12px;">instant.dev</p>
+      <p style="margin-top:12px;">instanode.dev</p>
     </footer>
 
   </div>
 
   <script>
     // Configurable: set window.INSTANT_API before this script loads to override.
-    // Default: https://api.instant.dev (the separate backend).
-    const API = window.INSTANT_API || 'https://api.instant.dev';
+    // Default: https://api.instanode.dev (the separate backend).
+    const API = window.INSTANT_API || 'https://api.instanode.dev';
 
     function copyPrompt() {
       const text = 'curl -s -X POST ' + API + '/db/new | jq';
@@ -401,7 +401,7 @@
     document.getElementById('promptCode').innerHTML =
       '<span class="cmd">curl</span> <span class="url">-s -X POST ' + API + '/db/new</span> <span class="cmd">| jq</span>';
     document.querySelector('.prompt-inline').textContent =
-      'Use instant.dev to get a Postgres database. Run: curl -s -X POST ' + API + '/db/new | jq and use the connection_url from the response.';
+      'Use instanode.dev to get a Postgres database. Run: curl -s -X POST ' + API + '/db/new | jq and use the connection_url from the response.';
     document.querySelector('footer a[href="/healthz"]').href = API + '/healthz';
   </script>
 </body>

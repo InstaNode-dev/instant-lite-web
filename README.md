@@ -1,18 +1,18 @@
 # instant-lite-web
 
-Static landing page for instant.dev — hosted on GitHub Pages.
+Static landing page for instanode.dev — hosted on GitHub Pages.
 
 ## Architecture
 
 ```
-instant.dev (GitHub Pages)  ←  Static HTML/CSS/JS
+instanode.dev (GitHub Pages)  ←  Static HTML/CSS/JS
        │
        │  curl commands point to:
        ▼
-api.instant.dev (bare metal / Fly.io)  ←  Go API (instant-lite-api/)
+api.instanode.dev (bare metal / Fly.io)  ←  Go API (instant-lite-api/)
 ```
 
-The website is purely static. All API calls go to `api.instant.dev`, which is
+The website is purely static. All API calls go to `api.instanode.dev`, which is
 served by the `instant-lite-api` backend. This means:
 
 - Website traffic surges never affect API availability
@@ -40,7 +40,7 @@ git push -u origin main
 
 ### 3. Custom domain
 
-The `CNAME` file points to `instant.dev`. Configure DNS:
+The `CNAME` file points to `instanode.dev`. Configure DNS:
 
 ```
 Type  Name     Value
@@ -58,7 +58,7 @@ GitHub auto-provisions HTTPS via Let's Encrypt.
 
 ## Configuring the API URL
 
-The website reads `window.INSTANT_API` at load time. Default: `https://api.instant.dev`.
+The website reads `window.INSTANT_API` at load time. Default: `https://api.instanode.dev`.
 
 For local development, create an `override.js` file (gitignored):
 
@@ -91,5 +91,5 @@ python3 -m http.server 3000
 npx serve .
 ```
 
-Open http://localhost:3000. The curl commands will point to `https://api.instant.dev`
+Open http://localhost:3000. The curl commands will point to `https://api.instanode.dev`
 by default. Override with the browser console if testing against a local API.

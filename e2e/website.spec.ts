@@ -124,10 +124,10 @@ test.describe('Landing Page — AI Agents Section', () => {
     await expect(page.locator('.agents h2')).toHaveText('Built for AI agents');
   });
 
-  test('agent prompt text mentions instant.dev and curl', async ({ page }) => {
+  test('agent prompt text mentions instanode.dev and curl', async ({ page }) => {
     const prompt = page.locator('.prompt-inline');
     await expect(prompt).toBeVisible();
-    await expect(prompt).toContainText('instant.dev');
+    await expect(prompt).toContainText('instanode.dev');
     await expect(prompt).toContainText('curl');
   });
 
@@ -185,8 +185,8 @@ test.describe('Landing Page — Footer', () => {
     await expect(footer.locator('a', { hasText: 'Status' })).toBeVisible();
   });
 
-  test('footer shows instant.dev', async ({ page }) => {
-    await expect(page.locator('footer')).toContainText('instant.dev');
+  test('footer shows instanode.dev', async ({ page }) => {
+    await expect(page.locator('footer')).toContainText('instanode.dev');
   });
 });
 
@@ -285,7 +285,7 @@ test.describe('Landing Page — llms.txt static file', () => {
     const response = await page.goto('/llms.txt');
     expect(response?.status()).toBe(200);
     const text = await page.content();
-    expect(text).toContain('instant.dev');
+    expect(text).toContain('instanode.dev');
   });
 });
 
