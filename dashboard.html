@@ -44,6 +44,14 @@
     .small-btn.secondary { background: transparent; color: #888; border-color: #222; }
     .small-btn.secondary:hover { border-color: #4af; color: #4af; background: transparent; }
     .small-btn.copied { background: #4a4; border-color: #4a4; color: #e6ffe6; }
+    .small-btn.danger { background: transparent; color: #f88; border: 1px solid #4a1818; }
+    .small-btn.danger:hover:not(:disabled) { background: #2a1010; border-color: #6a2626; color: #fbb; }
+    .upgrade-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .upgrade-modal { background: #111; border: 1px solid #2a4a6a; border-radius: 10px; padding: 24px 28px; max-width: 420px; color: #e0e0e0; box-shadow: 0 10px 40px rgba(74,175,255,0.1); }
+    .upgrade-modal h3 { color: #fff; margin-bottom: 8px; }
+    .upgrade-modal p { color: #bbb; font-size: 0.92rem; margin-bottom: 18px; }
+    .upgrade-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .upgrade-actions a, .upgrade-actions button { text-decoration: none; }
     .footer-row { margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.75rem; color: #666; }
     .empty, .error { background: #111; border: 1px solid #222; border-radius: 8px; padding: 32px 20px; text-align: center; color: #888; }
     .empty code { display: block; margin-top: 12px; padding: 10px 14px; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 6px; color: #adf; font-family: "SF Mono", monospace; font-size: 0.82rem; overflow-x: auto; }
@@ -197,7 +205,8 @@
       var id = esc(r.id || r.token || '');
       var statusClass = esc((r.status || '').toLowerCase());
       var tierClass = (r.tier || '').toLowerCase() === 'paid' ? 'paid' : 'anonymous';
-      return '<div class="card" data-id="' + id + '">' +
+      var tokenAttr = esc(r.token || '');
+      return '<div class="card" data-id="' + id + '" data-token="' + tokenAttr + '">' +
         '<div class="card-head">' +
           '<span class="badge ' + badge + '">' + esc(typeLabel(type)) + '</span>' +
           '<span class="pill ' + tierClass + '">' + esc(r.tier || 'unknown') + '</span>' +
@@ -208,6 +217,7 @@
           '<code class="conn" data-full="' + esc(url) + '" data-masked="1">' + esc(mask(url) || '—') + '</code>' +
           (url ? '<button type="button" class="small-btn secondary js-show">Show</button>' : '') +
           (url ? '<button type="button" class="small-btn js-copy">Copy</button>' : '') +
+          '<button type="button" class="small-btn danger js-delete" aria-label="Delete resource">Delete</button>' +
         '</div>' +
         '<div class="footer-row">' +
           '<span>Created ' + esc(relTime(r.created_at) || '—') + '</span>' +
@@ -241,7 +251,57 @@
             navigator.clipboard.writeText(full).then(done, function () { fallbackCopy(full); done(); });
           } else { fallbackCopy(full); done(); }
         });
+        var deleteBtn = card.querySelector('.js-delete');
+        if (deleteBtn) deleteBtn.addEventListener('click', function () {
+          var token = card.getAttribute('data-token');
+          if (!token) return;
+          if (!confirm('Permanently delete this resource? Any data inside is lost immediately.')) return;
+          deleteBtn.disabled = true;
+          deleteBtn.textContent = 'Deleting…';
+          fetch(API + '/api/me/resources/' + encodeURIComponent(token), {
+            method: 'DELETE',
+            credentials: 'include'
+          }).then(function (res) {
+            return res.json().then(function (body) { return { status: res.status, body: body }; });
+          }).then(function (r) {
+            if (r.status === 202 || r.status === 200) {
+              card.style.transition = 'opacity 0.2s';
+              card.style.opacity = '0';
+              setTimeout(function () { card.remove(); }, 220);
+              toast('Queued for deletion. Underlying DB is dropped within 5 minutes.');
+            } else if (r.status === 403 && r.body.error === 'paid_tier_only') {
+              deleteBtn.disabled = false;
+              deleteBtn.textContent = 'Delete';
+              showUpgradeModal(r.body.message || 'Upgrade to Developer to delete resources on demand.', r.body.upgrade_url || '/pricing.html');
+            } else {
+              deleteBtn.disabled = false;
+              deleteBtn.textContent = 'Delete';
+              toast(r.body.message || 'Delete failed.', 'err');
+            }
+          }).catch(function () {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = 'Delete';
+            toast('Network error — please retry.', 'err');
+          });
+        });
       })(cards[i]);
+    }
+
+    function showUpgradeModal(msg, href) {
+      var overlay = document.createElement('div');
+      overlay.className = 'upgrade-overlay';
+      overlay.innerHTML =
+        '<div class="upgrade-modal" role="dialog" aria-modal="true">' +
+        '  <h3>Upgrade to delete</h3>' +
+        '  <p>' + esc(msg) + '</p>' +
+        '  <div class="upgrade-actions">' +
+        '    <a class="small-btn" href="' + esc(href) + '">See Developer plan</a>' +
+        '    <button type="button" class="small-btn secondary js-close">Not now</button>' +
+        '  </div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      overlay.querySelector('.js-close').addEventListener('click', function () { overlay.remove(); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
     }
     function fallbackCopy(text) {
       try {
