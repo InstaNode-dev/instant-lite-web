@@ -267,6 +267,51 @@
       line-height: 1.5;
     }
 
+    /* ── Articles ── */
+    .articles {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 0;
+    }
+    .articles h2 {
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .articles .article-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .article-item {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.15s;
+    }
+    .article-item:hover { border-color: #4af; }
+    .article-item h3 {
+      font-size: 0.9rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .article-item p {
+      font-size: 0.8rem;
+      color: #666;
+      line-height: 1.5;
+    }
+    .article-item a {
+      color: #4af;
+      text-decoration: none;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-top: 12px;
+    }
+    .article-item a:hover { text-decoration: underline; }
+
     /* ── Footer ── */
     footer {
       border-top: 1px solid #1a1a1a;
@@ -432,6 +477,42 @@
       <div class="faq-item">
         <h3>I'm an agent, what should I do first?</h3>
         <p>Copy the setup instructions above and paste them into your agent. It will provision a database instantly.</p>
+      </div>
+    </div>
+
+    <div class="articles">
+      <h2>Articles</h2>
+      <div class="article-list">
+        <div class="article-item">
+          <h3>How Using Instant Databases Reduces Token Consumption by 90%</h3>
+          <p>Discover how skipping infrastructure setup saves 90% of AI agent tokens, allowing focus on core innovation.</p>
+          <a href="/content/articles/how-using-instant-databases-reduces-token-consumption-by-90.md">Read more →</a>
+        </div>
+        <div class="article-item">
+          <h3>Why Infrastructure Setup Costs Money with AI Agents</h3>
+          <p>Learn why traditional infra setup burns through API fees and how instant databases save money.</p>
+          <a href="/content/articles/why-infra-setup-costs-money-with-ai-agents.md">Read more →</a>
+        </div>
+        <div class="article-item">
+          <h3>AI Agents with Persistent Memory</h3>
+          <p>Explore how instant databases enable AI agents to remember conversations and user preferences.</p>
+          <a href="/content/articles/ai-agents-with-persistent-memory.md">Read more →</a>
+        </div>
+        <div class="article-item">
+          <h3>Prototyping AI Applications</h3>
+          <p>Accelerate AI prototyping with instant databases that eliminate setup bottlenecks.</p>
+          <a href="/content/articles/prototyping-ai-applications.md">Read more →</a>
+        </div>
+        <div class="article-item">
+          <h3>Knowledge Bases for RAG Systems</h3>
+          <p>Build powerful RAG applications with instant vector databases for semantic search.</p>
+          <a href="/content/articles/knowledge-bases-for-rag-systems.md">Read more →</a>
+        </div>
+        <div class="article-item">
+          <h3>Temporary Databases for AI Testing</h3>
+          <p>Create clean, isolated testing environments for AI models with instant databases.</p>
+          <a href="/content/articles/temporary-databases-for-ai-testing.md">Read more →</a>
+        </div>
       </div>
     </div>
 
