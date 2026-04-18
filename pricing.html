@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing - InstaNode</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    h1 { margin-bottom: 40px; }
+    .plan {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .plan h2 { margin-bottom: 10px; }
+    .btn {
+      background: #4af;
+      color: #060a14;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn:hover { background: #66bfff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Choose Your Plan</h1>
+    <div class="plan">
+      <h2>Monthly Plan</h2>
+      <p>₹500/month</p>
+      <button class="btn" onclick="pay('monthly')">Subscribe Monthly</button>
+    </div>
+    <div class="plan">
+      <h2>Annual Plan</h2>
+      <p>₹5000/year</p>
+      <button class="btn" onclick="pay('annual')">Subscribe Annual</button>
+    </div>
+  </div>
+  <script>
+    async function pay(planId) {
+      try {
+        const res = await fetch('/billing/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan_id: planId })
+        });
+        const order = await res.json();
+
+        const options = {
+          key: order.key_id,
+          amount: order.amount,
+          currency: order.currency,
+          order_id: order.order_id,
+          name: order.name,
+          description: 'InstaNode Subscription',
+          handler: function (response) {
+            // After payment, migrate the resource
+            const token = localStorage.getItem('instanode_token');
+            if (token) {
+              fetch('/billing/migrate?token=' + token, { method: 'POST' });
+            }
+            window.location.href = '/dashboard';
+          }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>
