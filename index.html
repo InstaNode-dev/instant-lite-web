@@ -75,18 +75,20 @@
       text-align: center;
     }
     .hero h1 {
-      font-size: 2.2rem;
+      font-size: clamp(2.2rem, 5vw, 3rem);
       font-weight: 700;
       color: #fff;
       letter-spacing: -0.03em;
-      line-height: 1.2;
-      margin-bottom: 12px;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      text-wrap: balance;
     }
     .hero p {
-      font-size: 1rem;
-      color: #888;
-      max-width: 420px;
+      font-size: 1.05rem;
+      color: #a0a0a0;
+      max-width: 460px;
       margin: 0 auto;
+      text-wrap: pretty;
     }
 
     /* ── The Prompt (hero element) ── */
@@ -427,7 +429,7 @@
     </nav>
 
     <div class="hero">
-      <h1>Free, instant database<br>for agents</h1>
+      <h1>Free, instant database for agents</h1>
       <p>One command. Real database. No account needed.</p>
     </div>
 
