@@ -253,15 +253,17 @@
       flex-wrap: wrap;
     }
     .agent-links a {
-      display: inline-block;
-      padding: 6px 14px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 10px 16px;
       background: #111;
       border: 1px solid #222;
-      border-radius: 5px;
-      color: #888;
-      font-size: 0.78rem;
+      border-radius: 6px;
+      color: #bbb;
+      font-size: 0.85rem;
       text-decoration: none;
-      transition: all 0.15s;
+      transition: border-color 0.15s, color 0.15s;
     }
     .agent-links a:hover { border-color: #4af; color: #4af; }
 
@@ -290,6 +292,16 @@
     .tier ul { list-style: none; font-size: 0.78rem; color: #666; }
     .tier ul li { margin-bottom: 4px; }
     .tier ul li::before { content: "- "; color: #333; }
+
+    .compare-link {
+      color: #4af;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 10px 14px;
+    }
+    .compare-link:hover { text-decoration: underline; }
 
     /* ── FAQ ── */
     .faq {
@@ -516,7 +528,7 @@
           </ul>
         </div>
       </div>
-      <p style="text-align:center;margin-top:14px;"><a href="/pricing.html" style="color:#4af;">Compare plans →</a></p>
+      <p style="text-align:center;margin-top:14px;"><a href="/pricing.html" class="compare-link">Compare plans →</a></p>
     </div>
 
     <div class="faq">
