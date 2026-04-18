@@ -119,6 +119,16 @@
     }
     .footnote a { color: #4af; text-decoration: none; }
     .footnote a:hover { text-decoration: underline; }
+    footer.site {
+      border-top: 1px solid #1a1a1a;
+      padding: 24px 0;
+      margin-top: 32px;
+      text-align: center;
+      color: #444;
+      font-size: 0.8rem;
+    }
+    footer.site a { color: #666; margin: 0 10px; text-decoration: none; }
+    footer.site a:hover { color: #4af; }
     @media (max-width: 480px) {
       body { padding: 24px 16px; }
       .plan { padding: 24px 20px; }
@@ -152,6 +162,14 @@
     <p class="footnote">
       Secure checkout by Razorpay. Cancel anytime from the <a href="/dashboard">dashboard</a>.
     </p>
+
+    <footer class="site">
+      <a href="/">Home</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <p style="margin-top:12px;">instanode.dev</p>
+    </footer>
   </div>
 
   <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
