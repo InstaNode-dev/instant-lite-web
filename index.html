@@ -48,31 +48,35 @@
     .prompt-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
+      justify-content: center;
+      padding: 14px 16px;
       background: #0d0d0d;
       border-bottom: 1px solid #1a1a1a;
     }
     .prompt-label {
-      font-size: 0.72rem;
-      color: #555;
-      font-family: monospace;
-      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
       letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .copy-btn {
-      background: none;
-      border: 1px solid #333;
-      color: #888;
-      font-size: 0.75rem;
-      padding: 3px 12px;
-      border-radius: 4px;
+      background: #4af;
+      border: 1px solid #4af;
+      color: #060a14;
+      font-size: 0.95rem;
+      padding: 12px 18px;
+      border-radius: 999px;
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.15s;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      box-shadow: 0 10px 30px rgba(74, 175, 255, 0.18);
+      letter-spacing: 0.02em;
     }
-    .copy-btn:hover { border-color: #4af; color: #4af; }
-    .copy-btn.copied { border-color: #4a4; color: #4a4; }
+    .copy-btn:hover { background: #66bfff; border-color: #66bfff; }
+    .copy-btn.copied { background: #4a4; border-color: #4a4; color: #e6ffe6; }
     .prompt-code {
       padding: 16px 18px;
       font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
@@ -345,7 +349,7 @@
     <!-- THE PROMPT — the one thing visitors need to copy -->
     <div class="prompt">
       <div class="prompt-header">
-        <button class="copy-btn bold-btn" id="copyBtn" onclick="copyPrompt()"><strong>Copy AI Agent Instructions</strong></button>
+        <button class="copy-btn" id="copyBtn" onclick="copyPrompt()"><strong>Copy AI Agent Instructions</strong></button>
       </div>
       <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instanode.dev/db/new</span> <span class="cmd">| jq</span></div>
       <p style="font-size: 0.75rem; color: #666; margin-top: 8px; text-align: center;">For detailed API documentation and examples, see <a href="/llms.txt" style="color: #4af;">/llms.txt</a></p>
