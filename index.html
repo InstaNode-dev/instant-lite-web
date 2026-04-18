@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>instanode.dev — Get a database in 3 seconds</title>
-  <meta name="description" content="One curl command. Real Postgres. No account, no Docker, no setup.">
+  <title>Free, instant database for agents</title>
+  <meta name="description" content="One command. Real Postgres. No account needed.">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -241,6 +241,32 @@
     .tier ul li { margin-bottom: 4px; }
     .tier ul li::before { content: "- "; color: #333; }
 
+    /* ── FAQ ── */
+    .faq {
+      border-top: 1px solid #1a1a1a;
+      padding: 40px 0;
+    }
+    .faq h2 {
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .faq .faq-item {
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    .faq h3 {
+      font-size: 0.9rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .faq p {
+      font-size: 0.8rem;
+      color: #666;
+      line-height: 1.5;
+    }
+
     /* ── Footer ── */
     footer {
       border-top: 1px solid #1a1a1a;
@@ -264,14 +290,14 @@
   <div class="container">
 
     <div class="hero">
-      <h1>Get a Postgres database<br>in 3 seconds.</h1>
+      <h1>Free, instant database<br>for agents</h1>
       <p>One command. Real database. No account needed.</p>
     </div>
 
     <!-- THE PROMPT — the one thing visitors need to copy -->
     <div class="prompt">
       <div class="prompt-header">
-        <span class="prompt-label">copy and run</span>
+        <span class="prompt-label">Copy setup instructions for my agent</span>
         <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
       </div>
       <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instanode.dev/db/new</span> <span class="cmd">| jq</span></div>
@@ -370,6 +396,42 @@
             <li>14-day free trial</li>
           </ul>
         </div>
+      </div>
+    </div>
+
+    <div class="faq">
+      <h2>FAQ</h2>
+      <div class="faq-item">
+        <h3>What should I use instanode.dev for?</h3>
+        <p>Anything you are creating with your agent and need a database for: apps, prototypes, tools, dashboards, AI agents, school projects, etc.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What agents/tools does this work with?</h3>
+        <p>All of them. Any AI agent that can make HTTP requests can provision databases on instanode.dev. Claude Code, Cursor, OpenClaw, or anything else.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Do I need an account to create a database?</h3>
+        <p>No, you can create a database without an account, but it will expire after 24 hours. If you want to keep it, register for an account and it will be permanent.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Are accounts free?</h3>
+        <p>Yes, the free tier gives you limited databases. Paid plans start at $12/month for unlimited usage.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Are instanode.dev databases public or private?</h3>
+        <p>Databases are private and secured with tokens. URLs are not guessable, and data is encrypted.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Can I provision as many databases as I want?</h3>
+        <p>Yes, but free tier has limits (5 per day). Paid plans have no limits.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Why is instanode.dev so fast?</h3>
+        <p>Your databases are hosted on a global network and served from the edge location nearest to you.</p>
+      </div>
+      <div class="faq-item">
+        <h3>I'm an agent, what should I do first?</h3>
+        <p>Copy the setup instructions above and paste them into your agent. It will provision a database instantly.</p>
       </div>
     </div>
 
