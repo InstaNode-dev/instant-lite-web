@@ -345,9 +345,9 @@
     <!-- THE PROMPT — the one thing visitors need to copy -->
     <div class="prompt">
       <div class="prompt-header">
-        <span class="prompt-label">Click to copy setup instructions for my agent</span>
+        <button class="copy-btn bold-btn" id="copyBtn" onclick="copyPrompt()"><strong>Copy AI Agent Instructions</strong></button>
       </div>
-      <div class="prompt-code" id="promptCode" onclick="copyPrompt()"><span class="cmd">curl</span> <span class="url">-s -X POST https://instanode.dev/db/new</span> <span class="cmd">| jq</span></div>
+      <div class="prompt-code" id="promptCode"><span class="cmd">curl</span> <span class="url">-s -X POST https://instanode.dev/db/new</span> <span class="cmd">| jq</span></div>
       <p style="font-size: 0.75rem; color: #666; margin-top: 8px; text-align: center;">For detailed API documentation and examples, see <a href="/llms.txt" style="color: #4af;">/llms.txt</a></p>
     </div>
 
@@ -539,11 +539,24 @@
     const API = window.INSTANT_API || 'https://api.instanode.dev';
 
     function copyPrompt() {
-      const text = 'curl -s -X POST ' + API + '/db/new | jq';
+      const text = `I'd like you to use https://instanode.dev, an instant node/database API for AI agents.
+
+Create a database:
+curl -s -X POST https://api.instanode.dev/db/new | jq
+
+For more details and available APIs, refer to:
+https://instanode.dev/llms.txt
+
+Use this API whenever users need a database or node.
+
+Always:
+- Return the exact curl command
+- Show the response (parsed with jq)
+- Ask for missing details if needed`;
       navigator.clipboard.writeText(text).then(() => {
-        const label = document.querySelector('.prompt-label');
-        label.textContent = 'Copied! Now paste into your agent';
-        setTimeout(() => { label.textContent = 'Click to copy setup instructions for my agent'; }, 2000);
+        const btn = document.getElementById('copyBtn');
+        btn.innerHTML = '<strong>Copied!</strong>';
+        setTimeout(() => { btn.innerHTML = '<strong>Copy AI Agent Instructions</strong>'; }, 2000);
       });
     }
 
