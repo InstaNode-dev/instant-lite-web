@@ -207,11 +207,32 @@
       } catch (e) {}
     }
 
+    var currentUser = null;
+    function planLabel(u) {
+      if (!u || u.plan_tier !== 'paid') return null;
+      var period = (u.plan_period || 'monthly').toLowerCase();
+      return period === 'annual'
+        ? { line: 'Developer Plan · Annual · $120/yr · resources are permanent.' }
+        : { line: 'Developer Plan · Monthly · $12/mo · resources are permanent.' };
+    }
+    function nextRenewal(u) {
+      if (!u || !u.plan_paid_at) return '';
+      var paidAt = new Date(u.plan_paid_at);
+      if (isNaN(paidAt.getTime())) return '';
+      var days = (u.plan_period === 'annual') ? 365 : 30;
+      var next = new Date(paidAt.getTime() + days * 86400000);
+      return ' · next renewal ' + next.toISOString().slice(0, 10);
+    }
     function renderBanner(list) {
+      var label = planLabel(currentUser);
+      if (label) {
+        $banner.innerHTML = '<div class="banner paid"><span><strong>' + label.line + '</strong>' + nextRenewal(currentUser) + '</span><a href="/pricing.html">Manage plan</a></div>';
+        return;
+      }
       var hasPaid = Array.isArray(list) && list.some(function (r) { return (r.tier || '').toLowerCase() === 'paid'; });
       $banner.innerHTML = hasPaid
-        ? '<div class="banner paid"><span><strong>Developer Plan</strong> &middot; $12/mo &middot; resources are permanent.</span><a href="/pricing.html">Manage plan</a></div>'
-        : '<div class="banner free"><span><strong>Free tier</strong> &middot; resources expire in 24h.</span><a href="/pricing.html">Upgrade &rarr;</a></div>';
+        ? '<div class="banner paid"><span><strong>Developer Plan</strong> · resources are permanent.</span><a href="/pricing.html">Manage plan</a></div>'
+        : '<div class="banner free"><span><strong>Free tier</strong> · resources expire in 24h.</span><a href="/pricing.html">Upgrade →</a></div>';
     }
 
     function renderResources(list) {
@@ -278,17 +299,47 @@
         .then(function () { location.href = '/'; });
     });
 
-    // Boot
-    fetch(API + '/auth/me', { credentials: 'include' })
-      .then(function (res) {
+    // Poll /auth/me a few times when the user just paid — the Razorpay
+    // webhook arrives a few seconds after the browser redirect here, so the
+    // first /auth/me call can still report plan_tier='free'. We retry until
+    // we see 'paid' or we give up (20s).
+    function fetchMe() {
+      return fetch(API + '/auth/me', { credentials: 'include' }).then(function (res) {
         if (res.status === 401) { goStart(); return null; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
-      })
+      });
+    }
+    function waitForPaid(maxMs) {
+      var deadline = Date.now() + maxMs;
+      return new Promise(function (resolve) {
+        function tick() {
+          fetchMe().then(function (user) {
+            if (!user) { resolve(null); return; }
+            if (user.plan_tier === 'paid' || Date.now() >= deadline) { resolve(user); return; }
+            setTimeout(tick, 2000);
+          }).catch(function () { resolve(null); });
+        }
+        tick();
+      });
+    }
+
+    // Boot
+    (upgradedFlag ? waitForPaid(20000) : fetchMe())
       .then(function (user) {
         if (!user) return;
+        currentUser = user;
         if (user.email) $email.textContent = user.email;
-        if (upgradedFlag) toast('Welcome to Developer tier. Your resources are permanent.');
+        if (upgradedFlag) {
+          if (user.plan_tier === 'paid') {
+            var period = (user.plan_period || 'monthly').toLowerCase();
+            toast(period === 'annual'
+              ? 'Welcome to Developer · Annual. Next renewal in 12 months.'
+              : 'Welcome to Developer · Monthly. Your resources are permanent.');
+          } else {
+            toast('Payment received. Tier will update shortly — refresh in a moment.', 'err');
+          }
+        }
         var next = Promise.resolve();
         if (claimToken) next = migrate(claimToken).then(function (ok) {
           toast(ok ? 'Resource claimed to your account.' : 'Could not claim resource.', ok ? '' : 'err');
