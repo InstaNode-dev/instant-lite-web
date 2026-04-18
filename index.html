@@ -33,6 +33,14 @@
       }
     }
 
+    @keyframes hero-rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero h1 { animation: hero-rise 500ms ease-out both; }
+    .hero p { animation: hero-rise 500ms ease-out 80ms both; }
+    .prompt { animation: hero-rise 500ms ease-out 160ms both; }
+
     .container { max-width: 640px; margin: 0 auto; padding: 0 20px; }
 
     /* ── Top nav ── */
