@@ -432,8 +432,8 @@
       <div class="top-nav-links">
         <a href="/pricing.html">Pricing</a>
         <a href="/agent.html">For Agents</a>
-        <a href="/dashboard.html">Dashboard</a>
-        <a class="login" href="https://api.instanode.dev/auth/github/login">Sign in</a>
+        <a href="/dashboard.html" data-auth="in" hidden>Dashboard</a>
+        <a class="login" href="https://api.instanode.dev/auth/github/login" data-auth="out">Sign in</a>
       </div>
     </nav>
 
@@ -461,7 +461,7 @@
       <div class="output-block">{
   <span class="k">"ok"</span>:             <span class="b">true</span>,
   <span class="k">"token"</span>:          <span class="s">"a1b2c3d4-..."</span>,
-  <span class="k">"connection_url"</span>: <span class="v">"postgres://usr_a1b2:s3cr3t@db.instanode.dev:5432/db_a1b2"</span>,
+  <span class="k">"connection_url"</span>: <span class="v">"postgres://usr_a1b2:s3cr3t@pg.instanode.dev:5432/db_a1b2?sslmode=require"</span>,
   <span class="k">"tier"</span>:           <span class="s">"anonymous"</span>,
   <span class="k">"limits"</span>:         { <span class="k">"storage_mb"</span>: <span class="n">10</span>, <span class="k">"connections"</span>: <span class="n">2</span>, <span class="k">"expires_in"</span>: <span class="s">"24h"</span> },
 }</div>
@@ -488,7 +488,7 @@
         <div class="step">
           <div class="num">Step 1</div>
           <h4>One POST</h4>
-          <p>No account, no config. Returns a live connection string in under 500ms.</p>
+          <p>No account, no config. Returns a live connection string on the same HTTP call.</p>
         </div>
         <div class="step">
           <div class="num">Step 2</div>
@@ -568,15 +568,15 @@
       </div>
       <div class="faq-item">
         <h3>Are accounts free?</h3>
-        <p>Yes, the free tier gives you limited databases. Paid plans start at $12/month for unlimited usage.</p>
+        <p>The free tier needs no account. Paid Developer starts at $12/month ($120/year) — 500 MB, 5 connections, permanent databases, unlimited provisions. See the pricing page for exact limits.</p>
       </div>
       <div class="faq-item">
         <h3>Are instanode.dev databases public or private?</h3>
-        <p>Databases are private and secured with tokens. URLs are not guessable, and data is encrypted.</p>
+        <p>Databases are private and secured with tokens. URLs are not guessable, and connections are TLS-encrypted.</p>
       </div>
       <div class="faq-item">
         <h3>Can I provision as many databases as I want?</h3>
-        <p>Yes, but free tier has limits (5 per day). Paid plans have no limits.</p>
+        <p>Free tier: up to 5 provisions per day per IP subnet. Developer plan lifts that cap — provision as many as you need.</p>
       </div>
       <div class="faq-item">
         <h3>Why is instanode.dev so fast?</h3>
@@ -592,9 +592,9 @@
       <h2>Articles</h2>
       <div class="article-list">
         <div class="article-item">
-          <h3>How Using Instant Databases Reduces Token Consumption by 90%</h3>
-          <p>Discover how skipping infrastructure setup saves 90% of AI agent tokens, allowing focus on core innovation.</p>
-          <a href="/content/articles/how-using-instant-databases-reduces-token-consumption-by-90.html" aria-label="Read: How Using Instant Databases Reduces Token Consumption by 90%">Read more →</a>
+          <h3>How Instant Databases Cut Agent Token Spend</h3>
+          <p>Most agent conversations waste tokens on setup steps. Skipping that cuts a lot of noise from your traces.</p>
+          <a href="/content/articles/how-using-instant-databases-reduces-token-consumption-by-90.html" aria-label="Read: How Instant Databases Cut Agent Token Spend">Read more →</a>
           <div style="display:none"><a href="/content/articles/how-using-instant-databases-reduces-token-consumption-by-90.md">Raw markdown for LLMs</a></div>
         </div>
         <div class="article-item">
@@ -647,20 +647,23 @@
     const API = window.INSTANT_API || 'https://api.instanode.dev';
 
     function copyPrompt() {
-      const text = `I'd like you to use https://instanode.dev, an instant node/database API for AI agents.
+      const text = `I'd like you to use https://instanode.dev, an instant Postgres API for AI agents.
 
-Create a database:
-curl -s -X POST https://api.instanode.dev/db/new | jq
+Create a database (name is required):
+curl -s -X POST ${API}/db/new \\
+  -H 'Content-Type: application/json' \\
+  -d '{"name":"<project-slug>"}' | jq
 
 For more details and available APIs, refer to:
 https://instanode.dev/llms.txt
 
-Use this API whenever users need a database or node.
+Use this API whenever users need a database.
 
 Always:
+- Replace <project-slug> with a short kebab-case label (do NOT leave the placeholder)
 - Return the exact curl command
 - Show the response (parsed with jq)
-- Ask for missing details if needed`;
+- Use connection_url from the response as DATABASE_URL`;
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copyBtn');
         btn.innerHTML = '<strong>Copied!</strong>';
@@ -668,12 +671,28 @@ Always:
       });
     }
 
-    // Rewrite hardcoded URLs to use the configured API base.
+    // Rewrite hardcoded URLs to use the configured API base. Keep the required
+    // {"name":"..."} body — the endpoint 400s without it.
     document.getElementById('promptCode').innerHTML =
-      '<span class="cmd">curl</span> <span class="url">-s -X POST ' + API + '/db/new</span> <span class="cmd">| jq</span>';
+      '<span class="cmd">curl</span> <span class="url">-s -X POST ' + API + '/db/new</span> <span class="cmd">\\</span>\n' +
+      '  <span class="cmd">-H</span> <span class="str">\'Content-Type: application/json\'</span> <span class="cmd">\\</span>\n' +
+      '  <span class="cmd">-d</span> <span class="str">\'{"name":"my-side-project"}\'</span> <span class="cmd">| jq</span>';
     document.querySelector('.prompt-inline').textContent =
-      'Use instanode.dev to get a Postgres database. Run: curl -s -X POST ' + API + '/db/new | jq and use the connection_url from the response.';
+      'Use instanode.dev to get a Postgres database. Run: curl -s -X POST ' + API + '/db/new -H \'Content-Type: application/json\' -d \'{"name":"<project>"}\' | jq and use the connection_url from the response.';
     document.querySelector('footer a[href="/healthz"]').href = API + '/healthz';
+
+    // Toggle nav based on session. `data-auth="in"` shows only when logged in;
+    // `data-auth="out"` shows only when logged out. Uses the session cookie
+    // that's shared across .instanode.dev (Secure + SameSite=None).
+    fetch(API + '/auth/me', { credentials: 'include' }).then(function (res) {
+      var signedIn = res.ok;
+      document.querySelectorAll('[data-auth="in"]').forEach(function (el) {
+        if (signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+      document.querySelectorAll('[data-auth="out"]').forEach(function (el) {
+        if (!signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+    }).catch(function () {});
   </script>
 </body>
 </html>

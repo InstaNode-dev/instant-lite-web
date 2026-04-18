@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claim Your Database - InstaNode</title>
+  <title>Sign in — InstaNode</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -15,46 +15,128 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
     }
     .container {
-      max-width: 400px;
+      max-width: 440px;
       text-align: center;
-      padding: 20px;
     }
     h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
+      font-size: 1.8rem;
+      color: #fff;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+    p { color: #a0a0a0; margin-bottom: 8px; }
+    p.detail { color: #666; font-size: 0.9rem; }
+    .token {
+      margin: 14px 0 0;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.85rem;
+      color: #6bf;
+      word-break: break-all;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: inline-block;
     }
     .btn {
       background: #4af;
       color: #060a14;
       border: none;
       padding: 12px 24px;
-      border-radius: 8px;
+      border-radius: 999px;
       font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
-      margin-top: 20px;
+      margin-top: 22px;
     }
     .btn:hover { background: #66bfff; }
+    .err {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #2a1010;
+      color: #f88;
+      border: 1px solid #4a1818;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .err.show { display: block; }
+    .footer {
+      margin-top: 36px;
+      font-size: 0.8rem;
+    }
+    .footer a { color: #666; text-decoration: none; margin: 0 8px; }
+    .footer a:hover { color: #4af; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Claim Your Database</h1>
-    <p>Your database is ready! Sign in with GitHub to access it.</p>
-    <a id="login-btn" href="https://api.instanode.dev/auth/github/login" class="btn">Login with GitHub</a>
+    <h1 id="title">Sign in with GitHub</h1>
+    <p id="lede">Create an account to keep your resources past 24 hours and to manage them in one place.</p>
+    <p id="token-label" class="detail" hidden>Claiming this token after sign-in:</p>
+    <div id="token-box" class="token" hidden></div>
+
+    <div id="err" class="err" role="alert" aria-live="polite"></div>
+
+    <a id="login-btn" href="https://api.instanode.dev/auth/github/login" class="btn">Continue with GitHub</a>
+
+    <div class="footer">
+      <a href="/">Home</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
   </div>
+
   <script>
-    // Carry any ?token= through the OAuth round trip — backend currently
-    // ignores the param, but localStorage lets the dashboard pick it up
-    // post-login and auto-migrate via POST /billing/migrate.
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    if (token) {
-      localStorage.setItem('instanode_token', token);
-    }
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var token = params.get('token');
+      var errCode = params.get('error');
+
+      if (token) {
+        try { localStorage.setItem('instanode_token', token); } catch (e) {}
+        document.getElementById('title').textContent = 'Claim your resource';
+        document.getElementById('lede').textContent = 'Sign in with GitHub to attach this resource to your account and keep it past 24 hours.';
+        var label = document.getElementById('token-label');
+        var box = document.getElementById('token-box');
+        label.hidden = false;
+        box.hidden = false;
+        box.textContent = token;
+      }
+
+      if (errCode) {
+        var err = document.getElementById('err');
+        var map = {
+          invalid_state: 'Your sign-in link expired. Try again.',
+          token_exchange_failed: 'GitHub rejected the sign-in. Try again.',
+          token_read_failed: 'Network hiccup during sign-in. Try again.',
+          token_parse_failed: 'GitHub response was malformed. Try again.',
+          no_access_token: 'GitHub declined to grant access. Try again.',
+          user_fetch_failed: 'Could not read your GitHub profile. Try again.',
+          user_decode_failed: 'GitHub returned an unexpected shape. Try again.',
+          user_upsert_failed: 'Something went wrong on our end. Try again in a minute.',
+          jwt_generate_failed: 'Something went wrong on our end. Try again in a minute.'
+        };
+        err.textContent = map[errCode] || 'Sign-in failed. Try again.';
+        err.classList.add('show');
+      }
+
+      // If already signed in, send the visitor straight to the dashboard.
+      fetch('https://api.instanode.dev/auth/me', { credentials: 'include' })
+        .then(function (res) {
+          if (res.ok) {
+            var dest = '/dashboard.html' + (token ? ('?token=' + encodeURIComponent(token)) : '');
+            location.replace(dest);
+          }
+        })
+        .catch(function () {});
+    })();
   </script>
 </body>
 </html>

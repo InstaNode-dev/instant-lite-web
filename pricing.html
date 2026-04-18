@@ -220,8 +220,8 @@
     <a href="/" class="brand">instanode.dev</a>
     <div class="top-nav-links">
       <a href="/pricing.html" aria-current="page">Pricing</a>
-      <a href="/dashboard.html">Dashboard</a>
-      <a class="login" href="https://api.instanode.dev/auth/github/login">Sign in</a>
+      <a href="/dashboard.html" data-auth="in" hidden>Dashboard</a>
+      <a class="login" href="https://api.instanode.dev/auth/github/login" data-auth="out">Sign in</a>
     </div>
   </nav>
   <div class="container">
@@ -405,6 +405,17 @@
         btn.addEventListener('click', function () { startCheckout(btn); });
       });
     })();
+
+    // Toggle nav items by auth state.
+    fetch('https://api.instanode.dev/auth/me', { credentials: 'include' }).then(function (res) {
+      var signedIn = res.ok;
+      document.querySelectorAll('[data-auth="in"]').forEach(function (el) {
+        if (signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+      document.querySelectorAll('[data-auth="out"]').forEach(function (el) {
+        if (!signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+    }).catch(function () {});
   </script>
 </body>
 </html>

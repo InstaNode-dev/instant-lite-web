@@ -23,7 +23,7 @@ Example response:
 {
   "ok": true,
   "token": "a1b2c3d4-...",
-  "connection_url": "postgres://usr_a1b2:s3cr3t@db.instanode.dev:5432/db_a1b2",
+  "connection_url": "postgres://usr_a1b2:s3cr3t@pg.instanode.dev:5432/db_a1b2?sslmode=require",
   "tier": "anonymous",
   "limits": { "storage_mb": 10, "connections": 2, "expires_in": "24h" }
 }
@@ -67,8 +67,9 @@ CREATE TABLE docs (id bigserial, embedding vector(1536));
 
 - Anonymous (no account): 10 MB storage, 2 connections, expires in **24 hours**.
   Fine for a first run while the code is being written.
-- Developer ($12/mo or $120/yr): 500 MB, 5 connections, **permanent**, unlimited
-  provisions.
+- Developer ($12/mo or $120/yr): 500 MB storage, 5 concurrent connections,
+  **permanent** resources, no per-subnet provision cap. Storage and connection
+  limits still apply per database.
 
 If the user wants the database to survive past the working session, direct them to
 https://instanode.dev/pricing.html to claim the token and upgrade. Never replace the

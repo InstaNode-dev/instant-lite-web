@@ -209,8 +209,8 @@
       <div class="top-nav-links">
         <a href="/pricing.html">Pricing</a>
         <a href="/agent.html">For Agents</a>
-        <a href="/dashboard.html">Dashboard</a>
-        <a class="login" href="https://api.instanode.dev/auth/github/login">Sign in</a>
+        <a href="/dashboard.html" data-auth="in" hidden>Dashboard</a>
+        <a class="login" href="https://api.instanode.dev/auth/github/login" data-auth="out">Sign in</a>
       </div>
     </nav>
 
@@ -471,6 +471,17 @@ pattern and are documented at https://instanode.dev/llms.txt.
         }
       });
     });
+
+    // Toggle nav items by auth state.
+    fetch('https://api.instanode.dev/auth/me', { credentials: 'include' }).then(function (res) {
+      var signedIn = res.ok;
+      document.querySelectorAll('[data-auth="in"]').forEach(function (el) {
+        if (signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+      document.querySelectorAll('[data-auth="out"]').forEach(function (el) {
+        if (!signedIn) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      });
+    }).catch(function () {});
   </script>
 </body>
 </html>
