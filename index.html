@@ -34,14 +34,27 @@
       padding: 18px 0;
       border-bottom: 1px solid #1a1a1a;
     }
-    .top-nav .brand { color: #fff; font-weight: 600; text-decoration: none; }
-    .top-nav-links { display: flex; gap: 18px; align-items: center; }
-    .top-nav-links a { color: #888; text-decoration: none; font-size: 0.92rem; }
+    .top-nav .brand {
+      color: #fff;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 10px 0;
+    }
+    .top-nav-links { display: flex; gap: 8px; align-items: center; }
+    .top-nav-links a {
+      color: #888;
+      text-decoration: none;
+      font-size: 0.92rem;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+    }
     .top-nav-links a:hover { color: #fff; }
     .top-nav-links a.login {
       background: #4af;
       color: #060a14;
-      padding: 6px 14px;
+      padding: 10px 18px;
       border-radius: 6px;
       font-weight: 500;
     }
@@ -344,9 +357,12 @@
     .article-item a {
       color: #4af;
       text-decoration: none;
-      font-size: 0.8rem;
-      display: inline-block;
-      margin-top: 12px;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 8px 0;
+      margin-top: 8px;
     }
     .article-item a:hover { text-decoration: underline; }
 
@@ -358,8 +374,15 @@
       color: #333;
       font-size: 0.75rem;
     }
-    footer a { color: #444; text-decoration: none; margin: 0 8px; }
-    footer a:hover { color: #888; }
+    footer a {
+      color: #666;
+      text-decoration: none;
+      margin: 0 4px;
+      padding: 10px 8px;
+      display: inline-block;
+      min-height: 44px;
+    }
+    footer a:hover { color: #ccc; }
 
     @media (max-width: 600px) {
       .hero h1 { font-size: 1.6rem; }
