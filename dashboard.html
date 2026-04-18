@@ -58,6 +58,15 @@
     .claim-msg { margin-top: 10px; font-size: 0.85rem; min-height: 1.1em; }
     .claim-msg.err { color: #f88; }
     .claim-msg.ok { color: #4a4; }
+    .apikey-box { background: #130f1a; border: 1px solid #2a1a3a; border-radius: 8px; padding: 16px 18px; margin: 0 0 24px; }
+    .apikey-box h2 { font-size: 0.95rem; color: #fff; margin-bottom: 6px; }
+    .apikey-box p { font-size: 0.85rem; color: #888; margin-bottom: 12px; }
+    .apikey-box code { background: #0a0a0a; padding: 1px 6px; border-radius: 4px; color: #b9f; font-size: 0.8rem; }
+    .apikey-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .apikey-value { flex: 1 1 260px; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 10px 12px !important; font-family: "SF Mono", "Fira Code", monospace; }
+    .apikey-curl { margin-top: 12px; background: #0a0a0a; border: 1px solid #1a1a1a; padding: 12px 14px; border-radius: 6px; font-family: "SF Mono", "Fira Code", monospace; font-size: 0.78rem; color: #ccc; overflow-x: auto; }
+    .small-btn.secondary { background: transparent; color: #9dc; border: 1px solid #224; }
+    .small-btn.secondary:hover:not(:disabled) { background: #0e1620; border-color: #2a4a6a; }
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0d1a0e; color: #cfe8d0; border: 1px solid #1d4a20; padding: 10px 18px; border-radius: 999px; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; }
     .toast.show { opacity: 1; }
     .toast.err { background: #2a1010; color: #f88; border-color: #4a1818; }
@@ -94,6 +103,22 @@
         <button type="submit" class="small-btn" id="claim-submit">Claim</button>
       </form>
       <div class="claim-msg" id="claim-msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="apikey-box" id="apikey-box" aria-labelledby="apikey-heading" hidden>
+      <h2 id="apikey-heading">API token for CLI / agent</h2>
+      <p>Paid-tier callers skip the free 5/day per-IP cap by passing this token. Treat it like a password; 30-day expiry; rotate by clicking "Regenerate".</p>
+      <div class="apikey-row">
+        <code id="apikey-value" class="apikey-value">•••••••• hidden</code>
+        <button type="button" class="small-btn secondary" id="apikey-reveal">Reveal</button>
+        <button type="button" class="small-btn" id="apikey-copy">Copy</button>
+        <button type="button" class="small-btn secondary" id="apikey-rotate">Regenerate</button>
+      </div>
+      <pre class="apikey-curl" id="apikey-curl">curl -X POST https://api.instanode.dev/db/new \
+  -H 'Authorization: Bearer &lt;token&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"my-project"}'</pre>
+      <div class="claim-msg" id="apikey-msg" role="status" aria-live="polite"></div>
     </section>
 
     <div id="content"></div>
@@ -289,6 +314,77 @@
       document.getElementById('retryBtn').addEventListener('click', loadResources);
     }
 
+    function wireApiKeyBox() {
+      var box = document.getElementById('apikey-box');
+      var valueEl = document.getElementById('apikey-value');
+      var curlEl = document.getElementById('apikey-curl');
+      var revealBtn = document.getElementById('apikey-reveal');
+      var copyBtn = document.getElementById('apikey-copy');
+      var rotateBtn = document.getElementById('apikey-rotate');
+      var msg = document.getElementById('apikey-msg');
+      if (!box) return;
+
+      var currentToken = null;
+      var revealed = false;
+
+      function mask(t) { return t ? t.slice(0, 12) + '…' + t.slice(-6) : ''; }
+
+      function show() {
+        if (!currentToken) {
+          valueEl.textContent = '•••••••• hidden';
+          return;
+        }
+        valueEl.textContent = revealed ? currentToken : mask(currentToken);
+        revealBtn.textContent = revealed ? 'Hide' : 'Reveal';
+        // Keep the curl block readable with the real token once revealed.
+        if (revealed) {
+          curlEl.textContent = 'curl -X POST ' + API + '/db/new \\\n  -H "Authorization: Bearer ' + currentToken + '" \\\n  -H \'Content-Type: application/json\' \\\n  -d \'{"name":"my-project"}\'';
+        } else {
+          curlEl.textContent = 'curl -X POST ' + API + '/db/new \\\n  -H \'Authorization: Bearer <token>\' \\\n  -H \'Content-Type: application/json\' \\\n  -d \'{"name":"my-project"}\'';
+        }
+      }
+
+      function fetchToken(force) {
+        fetch(API + '/api/me/token', { credentials: 'include' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (body) {
+            if (body && body.token) {
+              currentToken = body.token;
+              box.hidden = false;
+              // First load keeps it masked; rotation reveals so the user can
+              // copy the new value immediately.
+              if (force) revealed = true;
+              show();
+              if (force) msg.className = 'claim-msg ok';
+              if (force) msg.textContent = 'New token issued. Old token is still valid until JWT_SECRET is rotated.';
+            }
+          })
+          .catch(function () {});
+      }
+
+      revealBtn.addEventListener('click', function () { revealed = !revealed; show(); });
+      rotateBtn.addEventListener('click', function () { fetchToken(true); });
+      copyBtn.addEventListener('click', function () {
+        if (!currentToken) return;
+        (navigator.clipboard ? navigator.clipboard.writeText(currentToken) : Promise.reject())
+          .then(function () {
+            msg.className = 'claim-msg ok';
+            msg.textContent = 'Token copied to clipboard.';
+          })
+          .catch(function () {
+            var ta = document.createElement('textarea');
+            ta.value = currentToken;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); msg.className = 'claim-msg ok'; msg.textContent = 'Token copied to clipboard.'; }
+            catch (e) { msg.className = 'claim-msg err'; msg.textContent = 'Could not copy — select the text manually.'; }
+            document.body.removeChild(ta);
+          });
+      });
+
+      fetchToken(false);
+    }
+
     function wireClaimForm() {
       var form = document.getElementById('claim-form');
       var input = document.getElementById('claim-input');
@@ -409,6 +505,7 @@
         });
         next.then(loadResources);
         wireClaimForm();
+        wireApiKeyBox();
         if ((upgradedFlag || claimToken) && history.replaceState) history.replaceState({}, '', '/dashboard');
       })
       .catch(function () {
