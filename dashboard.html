@@ -509,7 +509,11 @@
         .then(function (res) {
           if (res.status === 401) { goStart(); return false; }
           return res.ok;
-        });
+        })
+        // Network failure here must not blow away the dashboard. The
+        // outer boot .catch() would render a full-page error otherwise;
+        // we just return false so the caller shows a toast.
+        .catch(function () { return false; });
     }
 
     document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -561,6 +565,10 @@
         }
         var next = Promise.resolve();
         if (claimToken) next = migrate(claimToken).then(function (ok) {
+          // Clear the token either way — stale localStorage would otherwise
+          // cause the next visitor on a shared device to try to re-claim
+          // somebody else's resource.
+          try { localStorage.removeItem('instanode_token'); } catch (e) {}
           toast(ok ? 'Resource claimed to your account.' : 'Could not claim resource.', ok ? '' : 'err');
         });
         next.then(loadResources);

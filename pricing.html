@@ -268,7 +268,7 @@
     </div>
 
     <p class="footnote">
-      Secure checkout by Razorpay. Cancel anytime from the <a href="/dashboard">dashboard</a>.
+      Secure checkout by Razorpay. Questions? Email <a href="mailto:admin@instanode.dev">admin@instanode.dev</a>.
     </p>
 
     <footer class="site">
@@ -352,8 +352,18 @@
               return null;
             }
             if (!res.ok) {
-              return res.text().then(function (t) {
-                throw new Error(t && t.length < 200 ? t : ('HTTP ' + res.status));
+              // Parse JSON body for a safe `message` from our own API; never
+              // surface raw text() (could be an HTML error page from a
+              // reverse proxy, or contain internal detail from an upstream).
+              return res.json().then(function (body) {
+                var safe = body && typeof body.message === 'string' ? body.message : '';
+                var e = new Error(safe || 'Checkout could not be started. Please try again in a moment.');
+                e.friendly = true;
+                throw e;
+              }, function () {
+                var e = new Error('Checkout could not be started. Please try again in a moment.');
+                e.friendly = true;
+                throw e;
               });
             }
             return res.json();
@@ -389,15 +399,32 @@
             rzp.on('payment.failed', function (resp) {
               btn.disabled = false;
               btn.textContent = resetLabel;
-              var reason = (resp && resp.error && (resp.error.description || resp.error.reason)) || 'Payment failed.';
-              showMsg(planID, 'error', reason + ' Please try again.');
+              // Razorpay's resp.error.description is gateway-controlled text.
+              // Only surface it when it's a short, human-ish string; otherwise
+              // fall back to a generic message so we never paint long SDK
+              // stack traces or vendor error codes into the UI.
+              var raw = resp && resp.error && (resp.error.description || resp.error.reason);
+              var safe = '';
+              if (typeof raw === 'string' && raw.length > 0 && raw.length <= 140) {
+                safe = raw;
+              }
+              showMsg(planID, 'error', safe
+                ? (safe + ' Please try again.')
+                : 'Payment failed. Please try a different card or retry in a moment.');
             });
             rzp.open();
           })
           .catch(function (err) {
             btn.disabled = false;
             btn.textContent = resetLabel;
-            showMsg(planID, 'error', 'Could not start checkout: ' + (err && err.message ? err.message : 'unknown error'));
+            // err.friendly === true means the message came from our own API
+            // via a safe `message` field. Anything else (network failure,
+            // browser block) we render as a generic retry prompt so we
+            // never paint stack traces or CORS strings at the user.
+            var text = (err && err.friendly && err.message)
+              ? err.message
+              : 'Could not reach the checkout service. Please check your connection and retry.';
+            showMsg(planID, 'error', text);
           });
       }
 
