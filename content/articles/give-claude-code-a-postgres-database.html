@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Give Claude Code a real Postgres database in 30 seconds (with pgvector, no Docker)</title>
+  <meta name="description" content="How to plug Claude Code into a live Postgres over MCP — zero setup, zero signup, works from the first prompt. Full walkthrough with a real RAG example.">
+  <meta property="og:title" content="Give Claude Code a real Postgres database in 30 seconds">
+  <meta property="og:description" content="How to plug Claude Code into a live Postgres over MCP — zero setup, zero signup. Full walkthrough with pgvector + RAG.">
+  <meta property="og:url" content="https://instanode.dev/content/articles/give-claude-code-a-postgres-database.html">
+  <meta property="og:type" content="article">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 20px; line-height: 1.25; }
+    h2 { font-size: 1.5rem; color: #fff; margin-top: 40px; margin-bottom: 16px; }
+    h3 { font-size: 1.2rem; color: #fff; margin-top: 30px; margin-bottom: 12px; }
+    p { margin-bottom: 16px; }
+    ul { margin-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; }
+    blockquote { border-left: 3px solid #333; padding: 4px 0 4px 16px; color: #bbb; margin-bottom: 16px; font-style: italic; }
+    pre { background: #111; border: 1px solid #222; border-radius: 8px; padding: 16px; margin: 16px 0; overflow-x: auto; }
+    code { font-family: "SF Mono", monospace; color: #adf; }
+    p code, li code { background: #111; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    a { color: #4af; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 40px; }
+    .byline { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
+
+    html { color-scheme: dark; }
+    :focus { outline: none; }
+    :focus-visible { outline: 2px solid #4af; outline-offset: 2px; }
+
+    .top-nav {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 20px 18px;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .top-nav .brand { color: #fff; font-weight: 600; text-decoration: none; padding: 10px 0; }
+    .top-nav-links { display: flex; gap: 8px; align-items: center; }
+    .top-nav-links a { color: #888; text-decoration: none; font-size: 0.92rem; padding: 10px 12px; display: inline-flex; align-items: center; min-height: 44px; }
+    .top-nav-links a:hover { color: #fff; }
+    .top-nav-links a.login { background: #4af; color: #060a14; padding: 10px 18px; border-radius: 6px; font-weight: 500; }
+    .top-nav-links a.login:hover { background: #66bfff; }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <a href="/" class="brand">instanode.dev</a>
+    <div class="top-nav-links">
+      <a href="/pricing.html">Pricing</a>
+      <a href="/dashboard.html">Dashboard</a>
+      <a class="login" href="https://api.instanode.dev/auth/github/login">Sign in</a>
+    </div>
+  </nav>
+  <div class="container">
+    <p class="back-link"><a href="/">← Back to instanode.dev</a></p>
+    <h1>Give Claude Code a real Postgres database in 30 seconds (with pgvector, no Docker)</h1>
+    <p class="byline">Tags: AI, Postgres, Claude Code, MCP, pgvector</p>
+
+    <p>I lost count of how many Claude Code sessions have died at the same wall.</p>
+
+    <p>I ask Claude to wire up a little side-project — a RAG over my notes, an agent that remembers conversations, a bookmark manager. Claude writes the app code. Then it gets to the database and stalls.</p>
+
+    <blockquote>"Before we proceed, can you install Postgres locally and create a database? Run <code>brew install postgresql</code>, then <code>createdb myapp</code>. Let me know when it's done."</blockquote>
+
+    <p>And that's the moment the session breaks. Either I:</p>
+
+    <ol style="margin-left:24px; margin-bottom:16px;">
+      <li>Install Postgres on the laptop, remember the password in three weeks when I come back to this, discover the version I installed is now behind whatever Drizzle needs, and burn 20 minutes fighting with <code>pg_hba.conf</code>.</li>
+      <li>Go sign up for Neon / Supabase / Railway. Create a free account. Accept terms. Verify email. Create a project. Copy the connection string. Paste it back into Claude. 15 minutes gone and I've lost flow.</li>
+      <li>Give up on the side-project.</li>
+    </ol>
+
+    <p>The right answer was: <strong>Claude Code should just provision the database itself.</strong> No local install, no signup, no tab-switching. And it turns out that if you give Claude Code the right MCP server, it does.</p>
+
+    <h2>The setup — one line</h2>
+
+    <p>Install <code>@instanode/mcp</code>:</p>
+
+    <pre><code>claude mcp add instanode -- npx -y @instanode/mcp@latest</code></pre>
+
+    <p>That's it. Restart Claude Code (or reload the session). It now has four new tools: <code>create_database</code>, <code>create_webhook</code>, <code>list_resources</code>, and <code>claim_token</code>.</p>
+
+    <p>Behind the scenes, the MCP server wraps a small HTTP API at <code>api.instanode.dev</code> that provisions real Postgres databases on demand. No account, no API key for the free tier — each database lives for 24 hours, has 10 MB of storage and two connections, and gets deleted after. Perfect for prototypes. When you want something permanent, you sign up for $12/mo and claim the resource.</p>
+
+    <p>Disclosure: I work on this. Disclosure that matters more: it's MIT-licensed, the source is <a href="https://github.com/InstaNode-dev/mcp">public on GitHub</a>, and the free tier is genuinely free — no credit card.</p>
+
+    <h2>The moment it clicks</h2>
+
+    <p>Ask Claude Code:</p>
+
+    <blockquote>"Set up a Postgres database for this project."</blockquote>
+
+    <p>Here's what I see in my terminal:</p>
+
+    <pre><code>● instanode (instanode) create_database
+  ⎿  {
+       "ok": true,
+       "token": "a1b2c3d4-...",
+       "connection_url": "postgres://usr_a1b2:***@pg.instanode.dev:5432/db_a1b2?sslmode=require",
+       "tier": "anonymous",
+       "limits": { "storage_mb": 10, "connections": 2, "expires_in": "24h" },
+       "note": "Works now. Keep it forever: https://instanode.dev/start?token=a1b2c3d4-..."
+     }
+
+● I've provisioned a Postgres database for you. I'll store the connection URL
+  in .env as DATABASE_URL and add a placeholder to .env.example so your
+  teammates know the variable exists.</code></pre>
+
+    <p>Claude writes <code>.env</code> (gitignored), adds <code>.env.example</code>, then starts generating the app against a live database. No break. No sign-up. No <code>brew install</code>. The whole handoff took about 4 seconds of wall-clock time.</p>
+
+    <h2>Part 2: a real thing — RAG with pgvector</h2>
+
+    <p>Single endpoints are boring. Let's build the use case most people actually want: <strong>retrieval-augmented generation</strong> over a small corpus, using pgvector.</p>
+
+    <p>Prompt I paste into Claude Code:</p>
+
+    <blockquote>"Use the instanode MCP to set up a Postgres database. Enable pgvector, create a <code>docs</code> table with <code>id bigserial PRIMARY KEY, content text, embedding vector(1536)</code>. Then write a small Python script that takes a text file, chunks it by paragraph, generates OpenAI embeddings for each chunk, and inserts them. Then write a second script that takes a query string, embeds it, and returns the top-5 most similar chunks."</blockquote>
+
+    <p>What Claude does, step by step:</p>
+
+    <p><strong>1. Provisions the database.</strong> Calls <code>create_database</code> → gets a DSN. Writes it to <code>.env</code>.</p>
+
+    <p><strong>2. Enables pgvector.</strong> This is the part I always forget on self-hosted Postgres. Not here — pgvector is pre-installed on every instanode database. Claude just runs:</p>
+
+    <pre><code>CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE docs (
+    id        bigserial PRIMARY KEY,
+    content   text,
+    embedding vector(1536)
+);
+
+CREATE INDEX docs_embedding_idx
+    ON docs USING hnsw (embedding vector_cosine_ops);</code></pre>
+
+    <p><strong>3. Writes the ingest script.</strong></p>
+
+    <pre><code># ingest.py
+import os, sys, psycopg
+from openai import OpenAI
+
+openai = OpenAI()
+db = psycopg.connect(os.environ["DATABASE_URL"])
+
+def chunk(text: str, size: int = 400) -> list[str]:
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    chunks, buf = [], ""
+    for p in paragraphs:
+        if len(buf) + len(p) &lt; size:
+            buf += "\n\n" + p if buf else p
+        else:
+            chunks.append(buf)
+            buf = p
+    if buf:
+        chunks.append(buf)
+    return chunks
+
+with open(sys.argv[1]) as f:
+    text = f.read()
+
+for c in chunk(text):
+    emb = openai.embeddings.create(
+        model="text-embedding-3-small",
+        input=c,
+    ).data[0].embedding
+    with db.cursor() as cur:
+        cur.execute(
+            "INSERT INTO docs (content, embedding) VALUES (%s, %s)",
+            (c, emb),
+        )
+db.commit()
+print(f"inserted {len(chunk(text))} chunks")</code></pre>
+
+    <p><strong>4. Writes the retrieval script.</strong></p>
+
+    <pre><code># retrieve.py
+import os, sys, psycopg
+from openai import OpenAI
+
+openai = OpenAI()
+db = psycopg.connect(os.environ["DATABASE_URL"])
+
+query = " ".join(sys.argv[1:]) or "what is postgres?"
+emb = openai.embeddings.create(
+    model="text-embedding-3-small",
+    input=query,
+).data[0].embedding
+
+with db.cursor() as cur:
+    cur.execute("""
+        SELECT content, 1 - (embedding &lt;=&gt; %s::vector) AS similarity
+        FROM docs
+        ORDER BY embedding &lt;=&gt; %s::vector
+        LIMIT 5
+    """, (emb, emb))
+    for content, sim in cur.fetchall():
+        print(f"[{sim:.3f}] {content[:120]}…")</code></pre>
+
+    <p><strong>5. Runs it.</strong> Claude runs <code>pip install psycopg openai</code>, then <code>python ingest.py notes.md</code>, then <code>python retrieve.py "how do I set up postgres"</code>.</p>
+
+    <p>From zero to a working semantic search over my own notes: about 90 seconds of real time, maybe 30 of which was Claude thinking. No Docker. No signup. No credit card.</p>
+
+    <h2>Why this works at all</h2>
+
+    <p>If you're wondering what's actually happening under the hood — this is a small, auditable stack.</p>
+
+    <p>Claude Code speaks MCP (Model Context Protocol). MCP lets it call tools that live outside its process. The <code>@instanode/mcp</code> package is a tiny Node server (~500 lines) that exposes five tools. When Claude calls <code>create_database</code>, the server makes an HTTPS POST to <code>api.instanode.dev/db/new</code>, parses the JSON response, and hands the connection string back to Claude as a tool result.</p>
+
+    <p>The upstream service is a single Go binary running behind Caddy on a DigitalOcean droplet. The <code>pg.instanode.dev</code> hostname points to PgBouncer, which multiplexes connections to a managed Postgres pool. Each call to <code>/db/new</code> runs <code>CREATE DATABASE db_&lt;token&gt;; CREATE USER usr_&lt;token&gt;...</code> under a least-privileged <code>provisioner_admin</code> role. Anonymous databases are swept after 24 hours by a reaper cron.</p>
+
+    <p>That's the whole trick. No magic. One Go binary, one Postgres server, PgBouncer for connection multiplexing, a DNS record, a TLS cert. The novelty isn't the infrastructure — it's that the infrastructure is exposed to agents via MCP instead of a web dashboard.</p>
+
+    <h2>Keeping it permanent</h2>
+
+    <p>The free tier is meant for prototypes. When you want a database to stick around past 24 hours, you either:</p>
+
+    <ol style="margin-left:24px; margin-bottom:16px;">
+      <li>Click the claim URL from the <code>note</code> field — signs you in with GitHub, $12/mo or $120/yr, and the resource you just provisioned becomes permanent. No migration, no new connection string.</li>
+      <li>Sign up first, mint a token from the dashboard, export <code>INSTANODE_TOKEN=eyJ…</code>, and all future provisions are permanent and linked to your account.</li>
+    </ol>
+
+    <p>There's a <a href="/dashboard.html">dashboard</a> that lists your resources, storage usage, and lets you delete things. It's not fancy. It's a boring paid product for people who want their databases to keep existing.</p>
+
+    <h2>When NOT to use this</h2>
+
+    <p>Honesty is a feature of technical writing. A few cases where this isn't the right tool:</p>
+
+    <ul>
+      <li><strong>Production workloads with specific compliance needs.</strong> We don't have SOC2 or a DPA ready. If you're building a product that stores PII for customers, use a vendor with compliance paperwork — Neon, Supabase, RDS.</li>
+      <li><strong>Huge databases.</strong> The paid tier is 500 MB. If you need 50 GB, this isn't it.</li>
+      <li><strong>When you need specific Postgres extensions beyond pgvector.</strong> We ship a stock Postgres 17 + pgvector. If you need <code>pg_stat_statements</code>, <code>postgis</code>, or something exotic, you'll hit a wall.</li>
+    </ul>
+
+    <p>For everything else — side projects, prototypes, coding demos, RAG experiments, agent memory, webhook testing — the friction of a full database provider signup is higher than the value of the provider's extra features.</p>
+
+    <h2>Try it</h2>
+
+    <pre><code>claude mcp add instanode -- npx -y @instanode/mcp@latest</code></pre>
+
+    <p>Then in Claude Code:</p>
+
+    <blockquote>"Provision a Postgres database for this project and write the connection URL to <code>.env</code>."</blockquote>
+
+    <p>You'll have a live <code>postgres://</code> connection string in about 4 seconds. Use it, break it, throw it away. No account needed.</p>
+
+    <ul>
+      <li>Source: <a href="https://github.com/InstaNode-dev/mcp">github.com/InstaNode-dev/mcp</a></li>
+      <li>npm: <a href="https://www.npmjs.com/package/@instanode/mcp">@instanode/mcp</a></li>
+      <li>Python SDK (if you'd rather call the HTTP API directly): <a href="https://pypi.org/project/instanode/">pypi.org/project/instanode</a></li>
+      <li>LangChain adapter: <a href="https://pypi.org/project/langchain-instanode/">pypi.org/project/langchain-instanode</a></li>
+      <li>LlamaIndex adapter: <a href="https://pypi.org/project/llama-index-tools-instanode/">pypi.org/project/llama-index-tools-instanode</a></li>
+      <li>CrewAI adapter: <a href="https://pypi.org/project/crewai-instanode-tools/">pypi.org/project/crewai-instanode-tools</a></li>
+      <li>Raw HTTP reference (for other agents / frameworks): <a href="/llms.txt">instanode.dev/llms.txt</a></li>
+    </ul>
+
+    <p>If Claude Code asks you to run <code>brew install postgres</code> again, you know what to paste back.</p>
+
+    <div style="display:none"><a href="/content/articles/give-claude-code-a-postgres-database.md">Raw markdown for LLMs</a></div>
+  </div>
+</body>
+</html>
